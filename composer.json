@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "sent\\": "src/"
+      "cccms\\": "src/"
     },
     "files": [
       "src/common.php"

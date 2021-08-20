@@ -7,7 +7,7 @@ use think\helper\{Str, Arr};
 
 \think\Console::starting(function (\think\Console $console) {
     $console->addCommands([
-        'addons:config' => '\\sent\\addons\\command\\SendConfig'
+        'addons:config' => '\\cccms\\addons\\command\\SendConfig'
     ]);
 });
 

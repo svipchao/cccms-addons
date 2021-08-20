@@ -137,7 +137,7 @@ abstract class Addons
             $info = array_merge($_info, $info);
         }
         if ($name) {
-            $base = get_class_methods("\\sent\\Addons");
+            $base = get_class_methods("\\cccms\\Addons");
             $methods = (array)get_class_methods("\\addons\\" . $name . "\\Plugin");
             $hooks = [];
             foreach (array_diff($methods, $base) as $v) {
