@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "cccms\\": "src/"
+      "cccms\\addons\\": "src/"
     },
     "files": [
       "src/common.php"
@@ -27,11 +27,8 @@
   "extra": {
     "think": {
       "services": [
-        "cccms\\addons\\Service"
-      ],
-      "config": {
-        "addons": "src/config.php"
-      }
+        "cccms\\addons\\Library"
+      ]
     }
   }
 }
