@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 use think\facade\Event;
 use think\facade\Route;
-use think\helper\{
-    Str, Arr
-};
+use think\helper\{Str, Arr};
 
 \think\Console::starting(function (\think\Console $console) {
     $console->addCommands([
@@ -15,7 +13,6 @@ use think\helper\{
 
 // 插件类库自动载入
 spl_autoload_register(function ($class) {
-
     $class = ltrim($class, '\\');
 
     $dir = app()->getRootPath();
@@ -35,12 +32,9 @@ spl_autoload_register(function ($class) {
             include $dir;
             return true;
         }
-
         return false;
     }
-
     return false;
-
 });
 
 if (!function_exists('hook')) {
@@ -54,7 +48,6 @@ if (!function_exists('hook')) {
     function hook($event, $params = null, bool $once = false)
     {
         $result = Event::trigger($event, $params, $once);
-
         return join('', $result);
     }
 }

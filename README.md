@@ -1,2 +1,3 @@
 CCCMS插件系统
-原作者：http://www.zzstudio.net
+
+基于 zzstudio/think-addons 二次修改

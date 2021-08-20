@@ -51,42 +51,34 @@ class Service extends \think\Service
             // 注册控制器路由
             $route->rule("addons/:addon/[:controller]/[:action]", $execute)->middleware(Addons::class);
             // 自定义路由
-            $routes = (array) Config::get('addons.route', []);
+            $routes = (array)Config::get('addons.route', []);
             foreach ($routes as $key => $val) {
-                if (!$val) {
-                    continue;
-                }
+                if (!$val) continue;
                 if (is_array($val)) {
                     $domain = $val['domain'];
                     $rules = [];
                     foreach ($val['rule'] as $k => $rule) {
                         [$addon, $controller, $action] = explode('/', $rule);
                         $rules[$k] = [
-                            'addons'        => $addon,
-                            'controller'    => $controller,
-                            'action'        => $action,
-                            'indomain'      => 1,
+                            'addons' => $addon,
+                            'controller' => $controller,
+                            'action' => $action,
+                            'indomain' => 1,
                         ];
                     }
                     $route->domain($domain, function () use ($rules, $route, $execute) {
                         // 动态注册域名的路由规则
                         foreach ($rules as $k => $rule) {
-                            $route->rule($k, $execute)
-                                ->name($k)
-                                ->completeMatch(true)
-                                ->append($rule);
+                            $route->rule($k, $execute)->name($k)->completeMatch(true)->append($rule);
                         }
                     });
                 } else {
                     list($addon, $controller, $action) = explode('/', $val);
-                    $route->rule($key, $execute)
-                        ->name($key)
-                        ->completeMatch(true)
-                        ->append([
-                            'addons' => $addon,
-                            'controller' => $controller,
-                            'action' => $action
-                        ]);
+                    $route->rule($key, $execute)->name($key)->completeMatch(true)->append([
+                        'addons' => $addon,
+                        'controller' => $controller,
+                        'action' => $action
+                    ]);
                 }
             }
         });
@@ -99,13 +91,13 @@ class Service extends \think\Service
     {
         $hooks = $this->app->isDebug() ? [] : Cache::get('hooks', []);
         if (empty($hooks)) {
-            $hooks = (array) Config::get('addons.hooks', []);
+            $hooks = (array)Config::get('addons.hooks', []);
             // 初始化钩子
             foreach ($hooks as $key => $values) {
                 if (is_string($values)) {
                     $values = explode(',', $values);
                 } else {
-                    $values = (array) $values;
+                    $values = (array)$values;
                 }
                 $hooks[$key] = array_filter(array_map(function ($v) use ($key) {
                     return [get_addons_class($v), $key];
@@ -165,8 +157,8 @@ class Service extends \think\Service
         if (!Config::get('addons.autoload', true)) {
             return true;
         }
-		$config = Config::get('addons');
-		$config['hooks'] = Cache::get('sentcms_hooks') ?? [];
+        $config = Config::get('addons');
+        $config['hooks'] = Cache::get('sentcms_hooks') ?? [];
         // 读取插件目录及钩子列表
         $base = get_class_methods("\\sent\\Addons");
         // 读取插件目录中的php文件
@@ -181,7 +173,7 @@ class Service extends \think\Service
                 $methods = (array)get_class_methods("\\addons\\" . $name . "\\" . $info['filename']);
                 // 跟插件基类方法做比对，得到差异结果
                 $hooks = array_diff($methods, $base);
-				// 循环将钩子方法写入配置中
+                // 循环将钩子方法写入配置中
                 foreach ($hooks as $hook) {
                     if (!isset($config['hooks'][$hook])) {
                         $config['hooks'][$hook] = [];
