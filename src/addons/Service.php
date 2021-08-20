@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace sent\addons;
+namespace cccms\addons;
 
 use think\Route;
 use think\helper\Str;

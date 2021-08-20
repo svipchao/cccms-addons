@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace sent;
+namespace cccms;
 
 use think\App;
 use think\helper\Str;

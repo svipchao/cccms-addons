@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace sent\addons\middleware;
+namespace cccms\addons\middleware;
 
 use think\App;
 
