@@ -25,7 +25,7 @@
   "extra": {
     "think": {
       "services": [
-        "cccms\\addons\\Library"
+        "cccms\\addons\\Service"
       ]
     }
   }
