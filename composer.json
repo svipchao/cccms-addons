@@ -28,10 +28,5 @@
         "cccms\\addons\\Service"
       ]
     }
-  },
-  "scripts" : {
-    "post-install-cmd": [
-      "php think addons:config"
-    ]
   }
 }
