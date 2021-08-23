@@ -1,91 +1,16 @@
 <?php
 declare(strict_types=1);
 
-use think\facade\Config;
+use cccms\extend\StrExtend;
 use think\facade\Event;
 use think\facade\Route;
-use think\helper\{
-    Str, Arr
-};
-
-if (!function_exists('_getEnCode')) {
-    /**
-     * 获取返回编码类型 (view,json,jsonp,xml)
-     * PS:  第一个为默认编码类型
-     *      view 类型请自行阅读 common.php->_result()
-     *      前后端分离开发模式不需要用到 view
-     * @param string $enCode 默认值
-     * @return string
-     */
-    function _getEnCode(string $enCode = 'view'): string
-    {
-        return strtolower(request()->param('encode/s', $enCode));
-    }
-}
-
-use think\Response;
-
-if (!function_exists('_result')) {
-    /**
-     * 返回数据
-     * @param array $data 参数
-     * @param string $type 输出类型(view,json,jsonp,xml)
-     * @param array $header 设置响应的头信息
-     */
-    function _result(array $data = [], string $type = '', array $header = []): Response
-    {
-        $data = array_merge([
-            'msg' => $data['msg'] ?? 'success',
-            'code' => $data['code'] ?? 200,
-            'data' => $data['data'] ?? [],
-            'url' => $data['url'] ?? '/'
-        ], $data);
-        if (in_array(strtolower($type), ['json', 'jsonp', 'xml'])) {
-            $response = Response::create($data, $type, (int)$data['code']);
-        } else {
-            // 处理视图
-            $addonsName = app()->request->param('addon'); // 插件名
-            if ($type === 'view') {
-                $htmlName = 'result.html'; // 模版文件名
-//                $htmlName = config('cccms.view.resultPath'); // 模版文件名
-            } elseif (!empty($addonsName)) {
-                $ds = DIRECTORY_SEPARATOR; // DIRECTORY_SEPARATOR
-                $suffix = '.' . config('view.view_suffix'); // 模板后缀
-
-                // 判断模版目录层级
-                if (count(explode('/', $type)) === 1) {
-                    $htmlPath = app()->request->controller() . $ds . $type;
-                } else {
-                    $htmlPath = $type;
-                }
-                $htmlName = root_path() . 'addons' . $ds . $addonsName . $ds . config('view.view_dir_name') . $ds . $htmlPath . $suffix;
-            } else {
-                $htmlName = $type; // 模版文件名
-            }
-            if (empty($htmlName)) {
-                $response = Response::create('异常模版不存在', 'html', 404);
-            } else {
-                $response = Response::create($htmlName, 'view', (int)$data['code'])->assign($data);
-            }
-        }
-        throw new \think\exception\HttpResponseException($response->header($header));
-    }
-}
-
-\think\Console::starting(function (\think\Console $console) {
-    $console->addCommands([
-        'addons:config' => '\\think\\addons\\command\\SendConfig'
-    ]);
-});
+use think\route\Url;
 
 // 插件类库自动载入
 spl_autoload_register(function ($class) {
-
     $class = ltrim($class, '\\');
-
     $dir = app()->getRootPath();
     $namespace = 'addons';
-
     if (strpos($class, $namespace) === 0) {
         $class = substr($class, strlen($namespace));
         $path = '';
@@ -95,17 +20,13 @@ spl_autoload_register(function ($class) {
         }
         $path .= str_replace('_', '/', $class) . '.php';
         $dir .= $namespace . $path;
-
         if (file_exists($dir)) {
             include $dir;
             return true;
         }
-
         return false;
     }
-
     return false;
-
 });
 
 if (!function_exists('hook')) {
@@ -114,12 +35,11 @@ if (!function_exists('hook')) {
      * @param string $event 钩子名称
      * @param array|null $params 传入参数
      * @param bool $once 是否只返回一个结果
-     * @return mixed
+     * @return string
      */
-    function hook($event, $params = null, bool $once = false)
+    function hook(string $event, array $params = null, bool $once = false): string
     {
         $result = Event::trigger($event, $params, $once);
-
         return join('', $result);
     }
 }
@@ -130,13 +50,12 @@ if (!function_exists('get_addons_info')) {
      * @param string $name 插件名
      * @return array
      */
-    function get_addons_info($name)
+    function get_addons_info(string $name): array
     {
         $addon = get_addons_instance($name);
         if (!$addon) {
             return [];
         }
-
         return $addon->getInfo();
     }
 }
@@ -147,7 +66,7 @@ if (!function_exists('get_addons_instance')) {
      * @param string $name 插件名
      * @return mixed|null
      */
-    function get_addons_instance($name)
+    function get_addons_instance(string $name)
     {
         static $_addons = [];
         if (isset($_addons[$name])) {
@@ -178,11 +97,10 @@ if (!function_exists('get_addons_class')) {
         // 处理多级控制器情况
         if (!is_null($class) && strpos($class, '.')) {
             $class = explode('.', $class);
-
-            $class[count($class) - 1] = Str::studly(end($class));
+            $class[count($class) - 1] = StrExtend::underlineToHump(end($class));
             $class = implode('\\', $class);
         } else {
-            $class = Str::studly(is_null($class) ? $name : $class);
+            $class = StrExtend::underlineToHump(is_null($class) ? $name : $class);
         }
         switch ($type) {
             case 'controller':
@@ -199,13 +117,13 @@ if (!function_exists('get_addons_class')) {
 if (!function_exists('addons_url')) {
     /**
      * 插件显示内容里生成访问插件的url
-     * @param $url
+     * @param string $url
      * @param array $param
      * @param bool|string $suffix 生成的URL后缀
      * @param bool|string $domain 域名
-     * @return bool|string
+     * @return Url
      */
-    function addons_url($url = '', $param = [], $suffix = true, $domain = false)
+    function addons_url(string $url = '', array $param = [], $suffix = true, $domain = false): Url
     {
         $request = app('request');
         if (empty($url)) {
@@ -215,7 +133,7 @@ if (!function_exists('addons_url')) {
             $controller = str_replace('/', '.', $controller);
             $action = $request->action();
         } else {
-            $url = Str::studly($url);
+            $url = StrExtend::underlineToHump($url);
             $url = parse_url($url);
             if (isset($url['scheme'])) {
                 $addons = strtolower($url['scheme']);
@@ -227,15 +145,13 @@ if (!function_exists('addons_url')) {
                 $action = array_pop($route);
                 $controller = array_pop($route) ?: $request->controller();
             }
-            $controller = Str::snake((string)$controller);
-
+            $controller = StrExtend::humpToUnderline((string)$controller);
             /* 解析URL带的参数 */
             if (isset($url['query'])) {
                 parse_str($url['query'], $query);
                 $param = array_merge($query, $param);
             }
         }
-
         return Route::buildUrl("@addons/{$addons}/{$controller}/{$action}", $param)->suffix($suffix)->domain($domain);
     }
 }
