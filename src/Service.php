@@ -7,7 +7,7 @@ use think\Route;
 use think\facade\Config;
 use think\facade\Cache;
 use think\facade\Event;
-use think\addons\middleware\Addons;
+use cccms\addons\middleware\Addons;
 
 /**
  * 插件服务
@@ -20,6 +20,7 @@ class Service extends \think\Service
 
     public function register()
     {
+        dump(1);
         $this->addons_path = $this->app->getRootPath() . 'addons' . DIRECTORY_SEPARATOR;
         // 自动载入插件
         $this->autoload();
