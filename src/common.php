@@ -44,45 +44,6 @@ if (!function_exists('hook')) {
     }
 }
 
-if (!function_exists('get_addons_info')) {
-    /**
-     * 读取插件的基础信息
-     * @param string $name 插件名
-     * @return array
-     */
-    function get_addons_info(string $name): array
-    {
-        $addon = get_addons_instance($name);
-        if (!$addon) {
-            return [];
-        }
-        return $addon->getInfo();
-    }
-}
-
-if (!function_exists('get_addons_instance')) {
-    /**
-     * 获取插件的单例
-     * @param string $name 插件名
-     * @return mixed|null
-     */
-    function get_addons_instance(string $name)
-    {
-        static $_addons = [];
-        if (isset($_addons[$name])) {
-            return $_addons[$name];
-        }
-        $class = get_addons_class($name);
-        if (class_exists($class)) {
-            $_addons[$name] = new $class(app());
-
-            return $_addons[$name];
-        } else {
-            return null;
-        }
-    }
-}
-
 if (!function_exists('get_addons_class')) {
     /**
      * 获取插件类的类名
@@ -109,7 +70,6 @@ if (!function_exists('get_addons_class')) {
             default:
                 $namespace = '\\addons\\' . $name . '\\Plugin';
         }
-
         return class_exists($namespace) ? $namespace : '';
     }
 }

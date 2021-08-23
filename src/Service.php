@@ -3,12 +3,10 @@ declare(strict_types=1);
 
 namespace cccms\addons;
 
-use think\app\MultiApp;
 use think\Route;
 use think\facade\Config;
 use think\facade\Cache;
 use think\facade\Event;
-use cccms\addons\middleware\Addons;
 
 /**
  * 插件服务
@@ -17,17 +15,10 @@ use cccms\addons\middleware\Addons;
  */
 class Service extends \think\Service
 {
-    protected $addons_path;
-
     public function register()
     {
-        $this->addons_path = $this->app->getRootPath() . 'addons' . DIRECTORY_SEPARATOR;
-        // 自动载入插件
-        $this->autoload();
         // 加载插件事件
         $this->loadEvent();
-        // 加载插件系统服务
-        $this->loadService();
         // 绑定插件容器
         $this->app->bind('addons', Service::class);
     }
@@ -35,12 +26,8 @@ class Service extends \think\Service
     public function boot()
     {
         $this->registerRoutes(function (Route $route) {
-            // 路由脚本
-            $execute = '\\cccms\\addons\\Route::execute';
-
-            // 注册控制器路由
-            $route->rule("addons/:addon/[:controller]/[:action]", $execute)->middleware(Addons::class);
-
+            // 注册控制器路由 路由脚本
+            $route->rule("addons/:addon/[:controller]/[:action]", '\\cccms\\addons\\Route::execute');
             // 自定义路由 这里采用路由插件实现
             // https://github.com/zz-studio/think-addons/blob/master/src/addons/Service.php line 53
         });
@@ -67,84 +54,12 @@ class Service extends \think\Service
             }
             Cache::set('hooks', $hooks);
         }
-        //如果在插件中有定义 AddonsInit，则直接执行
+        // 如果在插件中有定义 AddonsInit，则直接执行
         if (isset($hooks['AddonsInit'])) {
             foreach ($hooks['AddonsInit'] as $k => $v) {
                 Event::trigger('AddonsInit', $v);
             }
         }
         Event::listenEvents($hooks);
-    }
-
-    /**
-     * 挂载插件服务
-     */
-    private function loadService()
-    {
-        $results = scandir($this->addons_path);
-        $bind = [];
-        foreach ($results as $name) {
-            if ($name === '.' or $name === '..') {
-                continue;
-            }
-            if (is_file($this->addons_path . $name)) {
-                continue;
-            }
-            $addonDir = $this->addons_path . $name . DIRECTORY_SEPARATOR;
-            if (!is_dir($addonDir)) {
-                continue;
-            }
-
-            if (!is_file($addonDir . ucfirst($name) . '.php')) {
-                continue;
-            }
-
-            $service_file = $addonDir . 'service.ini';
-            if (!is_file($service_file)) {
-                continue;
-            }
-            $info = parse_ini_file($service_file, true, INI_SCANNER_TYPED) ?: [];
-            $bind = array_merge($bind, $info);
-        }
-        $this->app->bind($bind);
-    }
-
-    /**
-     * 自动载入插件
-     * @return void
-     */
-    private function autoload(): void
-    {
-        $config = Config::get('addons');
-        // 读取插件目录及钩子列表
-        $base = get_class_methods("\\cccms\\Addons");
-        // 读取插件目录中的php文件
-        foreach (glob($this->addons_path . '*/*.php') as $addons_file) {
-            // 格式化路径信息
-            $info = pathinfo($addons_file);
-            // 获取插件目录名
-            $name = pathinfo($info['dirname'], PATHINFO_FILENAME);
-            // 找到插件入口文件
-            if (strtolower($info['filename']) === 'plugin') {
-                // 读取出所有公共方法
-                $methods = (array)get_class_methods("\\addons\\" . $name . "\\" . $info['filename']);
-                // 跟插件基类方法做比对，得到差异结果
-                $hooks = array_diff($methods, $base);
-                // 循环将钩子方法写入配置中
-                foreach ($hooks as $hook) {
-                    if (!isset($config['hooks'][$hook])) {
-                        $config['hooks'][$hook] = [];
-                    }
-                    // 兼容手动配置项
-                    if (is_string($config['hooks'][$hook])) {
-                        $config['hooks'][$hook] = explode(',', $config['hooks'][$hook]);
-                    }
-                    if (!in_array($name, $config['hooks'][$hook])) {
-                        $config['hooks'][$hook][] = $name;
-                    }
-                }
-            }
-        }
-        Config::set($config, 'addons');
     }
 }
