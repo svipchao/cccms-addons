@@ -12,7 +12,7 @@ CREATE TABLE `sys_addons`
     `update_time` int                   DEFAULT 0 COMMENT '更新时间',
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE KEY `idx_name` (`name`),
-    INDEX         `idx_status` (`status`) USING BTREE
+    INDEX `idx_status` (`status`) USING BTREE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci COMMENT = '插件表';
