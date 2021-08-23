@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace cccms\addons;
 
+use think\app\MultiApp;
 use think\Route;
 use think\facade\Config;
 use think\facade\Cache;
@@ -20,7 +21,6 @@ class Service extends \think\Service
 
     public function register()
     {
-        dump(1);
         $this->addons_path = $this->app->getRootPath() . 'addons' . DIRECTORY_SEPARATOR;
         // 自动载入插件
         $this->autoload();
@@ -38,52 +38,11 @@ class Service extends \think\Service
             // 路由脚本
             $execute = '\\cccms\\addons\\Route::execute';
 
-            // 注册插件公共中间件
-            if (is_file($this->addons_path . 'middleware.php')) {
-                $this->app->middleware->import(include $this->addons_path . 'middleware.php', 'route');
-            }
-
             // 注册控制器路由
             $route->rule("addons/:addon/[:controller]/[:action]", $execute)->middleware(Addons::class);
-            // 自定义路由
-            $routes = (array)Config::get('addons.route', []);
-            foreach ($routes as $key => $val) {
-                if (!$val) {
-                    continue;
-                }
-                if (is_array($val)) {
-                    $domain = $val['domain'];
-                    $rules = [];
-                    foreach ($val['rule'] as $k => $rule) {
-                        [$addon, $controller, $action] = explode('/', $rule);
-                        $rules[$k] = [
-                            'addons' => $addon,
-                            'controller' => $controller,
-                            'action' => $action,
-                            'indomain' => 1,
-                        ];
-                    }
-                    $route->domain($domain, function () use ($rules, $route, $execute) {
-                        // 动态注册域名的路由规则
-                        foreach ($rules as $k => $rule) {
-                            $route->rule($k, $execute)
-                                ->name($k)
-                                ->completeMatch(true)
-                                ->append($rule);
-                        }
-                    });
-                } else {
-                    list($addon, $controller, $action) = explode('/', $val);
-                    $route->rule($key, $execute)
-                        ->name($key)
-                        ->completeMatch(true)
-                        ->append([
-                            'addons' => $addon,
-                            'controller' => $controller,
-                            'action' => $action
-                        ]);
-                }
-            }
+
+            // 自定义路由 这里采用路由插件实现
+            // https://github.com/zz-studio/think-addons/blob/master/src/addons/Service.php line 53
         });
     }
 
@@ -152,9 +111,9 @@ class Service extends \think\Service
 
     /**
      * 自动载入插件
-     * @return bool
+     * @return void
      */
-    private function autoload()
+    private function autoload(): void
     {
         $config = Config::get('addons');
         // 读取插件目录及钩子列表

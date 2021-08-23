@@ -33,11 +33,11 @@ if (!function_exists('hook')) {
     /**
      * 处理插件钩子
      * @param string $event 钩子名称
-     * @param array|null $params 传入参数
+     * @param null $params 传入参数
      * @param bool $once 是否只返回一个结果
      * @return string
      */
-    function hook(string $event, array $params = null, bool $once = false): string
+    function hook(string $event, $params = null, bool $once = false): string
     {
         $result = Event::trigger($event, $params, $once);
         return join('', $result);
