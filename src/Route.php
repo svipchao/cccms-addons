@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 namespace cccms\addons;
 
-use think\facade\Db;
-use think\facade\Event;
+use think\facade\{Db, Event};
 
 class Route
 {

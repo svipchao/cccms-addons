@@ -4,9 +4,7 @@ declare(strict_types=1);
 namespace cccms\addons;
 
 use think\Route;
-use think\facade\Config;
-use think\facade\Cache;
-use think\facade\Event;
+use think\facade\{Config, Cache, Event};
 
 /**
  * 插件服务
