@@ -32,14 +32,15 @@ class Route
         // 设置当前请求的控制器、操作
         $request->setController($controller)->setAction($action);
 
-        // 获取插件基础信息
-        $info = Db::table('sys_addons')->where(['name' => $addon])->findOrEmpty();
-
-        if (empty($info)) {
-            _result(['code' => 404, 'msg' => '插件不存在'], _getEncode());
-        }
-        if ($info['status'] === 0) {
-            _result(['code' => 404, 'msg' => '插件已禁用'], _getEncode());
+        // 过滤内置插件
+        if (!in_array(strtolower($addon), ['init', 'route'])) {
+            // 获取插件基础信息
+            $info = Db::table('sys_addons')->where(['name' => $addon])->findOrEmpty();
+            if (empty($info)) {
+                _result(['code' => 404, 'msg' => '插件不存在'], _getEncode());
+            } elseif ($info['status'] === 0) {
+                _result(['code' => 404, 'msg' => '插件已禁用'], _getEncode());
+            }
         }
 
         // 监听addon_module_init
